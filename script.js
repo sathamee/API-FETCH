@@ -1,110 +1,107 @@
-// create elements
-const container = document.createElement('div');
-container.classList.add('container', 'my-3');
-
-const heading = document.createElement('h1');
-heading.textContent = 'Search Countries';
-
-const formGroup1 = document.createElement('div');
-formGroup1.classList.add('form-group');
-
-const input = document.createElement('input');
-input.classList.add('form-control');
-input.setAttribute('type', 'text');
-input.setAttribute('id', 'search-input');
-input.setAttribute('placeholder', 'Search for a country...');
-
-formGroup1.appendChild(input);
-
-const formGroup2 = document.createElement('div');
-formGroup2.classList.add('form-group');
-
-const select = document.createElement('select');
-select.classList.add('form-control');
-select.setAttribute('id', 'filter-select');
-
-const option1 = document.createElement('option');
-option1.setAttribute('value', '');
-option1.textContent = 'All';
-const option2 = document.createElement('option');
-option2.setAttribute('value', 'name');
-option2.textContent = 'Name';
-const option3 = document.createElement('option');
-option3.setAttribute('value', 'region');
-option3.textContent = 'Region';
-const option4 = document.createElement('option');
-option4.setAttribute('value', 'subregion');
-option4.textContent = 'Subregion';
-
-select.appendChild(option1);
-select.appendChild(option2);
-select.appendChild(option3);
-select.appendChild(option4);
-
-formGroup2.appendChild(select);
-
-const searchResults = document.createElement('ul');
-searchResults.setAttribute('id', 'search-results');
-
-container.appendChild(heading);
-container.appendChild(formGroup1);
-container.appendChild(formGroup2);
-container.appendChild(searchResults);
-
-// append to body
-document.body.appendChild(container);
-
-// include script
-const script = document.createElement('script');
-script.setAttribute('src', 'script.js');
-document.body.appendChild(script);
-
-const searchInput = document.getElementById('search-input');
-const filterSelect = document.getElementById('filter-select');
-const searchResults = document.getElementById('search-results');
-
-async function getCountriesData() {
+const fetchData = async () => {
     try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
-        const data = await response.json();
-        return data;
+      const response = await fetch("https://restcountries.com/v3.1/all");
+      const data = await response.json();
+      return data;
     } catch (error) {
-        console.error(error);
+      console.error(error);
     }
-}
-
-function highlightText(text, query) {
-    const regex = new RegExp(query, 'gi');
-    return text.replace(regex, match => `<mark>${match}</mark>`);
-}
-
-function filterCountries(countries, query, filter) {
-    return countries.filter(country => {
-        const searchIn = filter || 'name';
-        const searchText = country[searchIn]?.common.toLowerCase() || '';
-        return searchText.includes(query);
+  };
+  
+  const filterCountries = (data, query) => {
+    return data.filter((country) => {
+      const countryName = country.name.common.toLowerCase();
+      const searchTerm = query.toLowerCase();
+  
+      return countryName.includes(searchTerm);
     });
-}
-
-async function searchCountries() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const filterValue = filterSelect.value;
-    const countriesData = await getCountriesData();
-    const filteredData = filterCountries(countriesData, searchTerm, filterValue);
-    const sortedData = filteredData.sort((a, b) => {
-        return b.population - a.population;
-    });
-    const topTwoData = sortedData.slice(0, 2);
-    const probability = (topTwoData[0].population / topTwoData[1].population * 100).toFixed(2);
-    const searchResultsHtml = topTwoData.map(country => {
-        const highlightedName = highlightText(country.name.common, searchTerm);
-        const highlightedRegion = highlightText(country.region, searchTerm);
-        const highlightedSubregion = highlightText(country.subregion, searchTerm);
-        return `<li><strong>${highlightedName}</strong> - ${highlightedRegion} - ${highlightedSubregion} - Population: ${country.population}</li>`;
-    }).join('');
-    searchResults.innerHTML = searchResultsHtml;
-    document.getElementById('probability').textContent = probability;
-}
-
-searchInput.addEventListener('input', searchCountries);
-filterSelect.addEventListener('change', searchCountries);
+  };
+  
+  const searchCountries = async (query, sortBy) => {
+    const data = await fetchData();
+    const filteredCountries = filterCountries(data, query);
+  
+    let sortedCountries;
+    if (sortBy === "population") {
+      sortedCountries = filteredCountries.sort(
+        (a, b) => b.population - a.population
+      );
+    } else if (sortBy === "region") {
+      sortedCountries = filteredCountries.sort((a, b) =>
+        a.region.localeCompare(b.region)
+      );
+    } else {
+      sortedCountries = filteredCountries.sort((a, b) =>
+        a.name.common.localeCompare(b.name.common)
+      );
+    }
+  
+    return sortedCountries;
+  };
+  
+  const displayCountries = async (query, sortBy) => {
+    const countries = await searchCountries(query, sortBy);
+    const resultsContainer = document.querySelector("#results-container");
+    const topTwoCountriesContainer = document.querySelector("#top-two-countries-container");
+    resultsContainer.innerHTML = "";
+    topTwoCountriesContainer.innerHTML = "";
+  
+    // Display the top two countries
+    const topTwoCountries = countries.slice(0, 2);
+    if (topTwoCountries.length > 0) {
+      topTwoCountries.forEach((country) => {
+        const population = country.population;
+        const probability = Math.round((population / 7800000000) * 100);
+        const countryName = country.name.common;
+  
+        const nameHTML = countryName.replace(
+          new RegExp(query, "gi"),
+          (match) => `<mark>${match}</mark>`
+        );
+  
+        const resultHTML = `
+          <div>
+            <p>${nameHTML}</p>
+            <p>Population: ${population}</p>
+            <p>Probability: ${probability}%</p>
+          </div>
+        `;
+  
+        topTwoCountriesContainer.innerHTML += resultHTML;
+      });
+    }
+  
+    // Display the remaining countries
+    if (countries.length > 2) {
+      const otherCountries = countries.slice(2);
+      const otherCountriesPopulation = otherCountries.reduce(
+        (total, country) => total + country.population,
+        0
+      );
+      const otherCountriesProbability = Math.round(
+        (otherCountriesPopulation / 7800000000) * 100
+      );
+      const otherCountriesHTML = `
+        <div>
+          <p>Other countries:</p>
+          <p>Population: ${otherCountriesPopulation}</p>
+          <p>Probability: ${otherCountriesProbability}%</p>
+        </div>
+      `;
+      resultsContainer.innerHTML += otherCountriesHTML;
+    }
+  };
+  
+  const searchInput = document.querySelector("#search-input");
+  const sortSelect = document.querySelector("#sort-select");
+  
+  searchInput.addEventListener("input", () => {
+    displayCountries(searchInput.value, sortSelect.value);
+  });
+  
+  sortSelect.addEventListener("change", () => {
+    displayCountries(searchInput.value, sortSelect.value);
+  });
+  
+  displayCountries("", "");
+  

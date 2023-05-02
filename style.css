@@ -1,0 +1,73 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  .search-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  
+  label {
+    margin-right: 10px;
+  }
+  
+  input[type="text"],
+  select {
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  input[type="text"] {
+    width: 70%;
+    margin-right: 10px;
+  }
+  
+  #top-two-countries-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  #top-two-countries-container div {
+    width: 48%;
+    background-color: #f2f2f2;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  #top-two-countries-container div p:first-child {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  #top-two-countries-container div mark {
+    background-color: yellow;
+    font-weight: bold;
+  }
+  
+  #results-container div {
+    margin-bottom: 10px;
+    background-color: #f2f2f2;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  #results-container div p:first-child {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  #results-container div mark {
+    background-color: yellow;
+    font-weight: bold;
+  }
+  
